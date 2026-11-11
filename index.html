@@ -63,6 +63,16 @@
   .sec h4 { margin:0 0 4px; color:var(--acc); font-size:13px; letter-spacing:.15em; font-weight:normal; }
   .sec pre { margin:0; white-space:pre-wrap; font:inherit; font-size:14px; line-height:1.5; }
   .sec.locked h4, .sec.locked pre { color:#3d3a60; }
+  .pdfbtn { color:#ffd25e !important; }
+  #printCv { display:none; }
+  @media print {
+    body > *:not(#printCv) { display:none !important; }
+    body { background:#fff !important; color:#000 !important; padding:0 !important; display:block !important; }
+    #printCv { display:block !important; font-family: Georgia, "DejaVu Serif", serif; color:#000; }
+    #printCv h1 { font-size:22pt; margin:0 0 4pt; } #printCv .sub { font-size:11pt; margin:0 0 14pt; color:#333; }
+    #printCv h2 { font-size:12pt; letter-spacing:.08em; border-bottom:1px solid #999; margin:14pt 0 6pt; padding-bottom:2pt; }
+    #printCv pre { font-family: inherit; white-space:pre-wrap; font-size:10.5pt; line-height:1.45; margin:0; }
+  }
 </style>
 </head>
 <body>
@@ -88,6 +98,7 @@
       <pre id="goArt" style="color:#ff5c7a;font-size:13px;line-height:1.15;margin-bottom:10px"></pre>
       <pre style="color:#d9d6f0">Tentokrát vás bugy dostaly…</pre>
       <div class="row go-row"><button id="goRestart">1)  Hrát znovu</button><button id="goCv">2)  Ukázat celý životopis</button></div>
+      <div class="row go-row" style="margin-top:8px"><button class="pdfbtn" data-pdf>⬇  Stáhnout CV (PDF)</button></div>
     </div>
   </div>
   <div class="modal" id="modal">
@@ -95,7 +106,7 @@
       <h3 id="mt"></h3>
       <pre id="mq"></pre>
       <div class="row" id="ansRow"></div>
-      <div class="row" id="closeRow" style="display:none"><button id="mclose">Zavřít</button></div>
+      <div class="row" id="closeRow" style="display:none"><button class="pdfbtn" data-pdf>⬇  Stáhnout CV (PDF)</button><button id="mclose">Zavřít</button></div>
       <div id="fb"></div>
     </div>
   </div>
@@ -105,7 +116,8 @@
   <b>← →</b> chůze &nbsp;·&nbsp; <b>MEZERNÍK</b> skok &nbsp;·&nbsp; <b>E</b> použít &nbsp;·&nbsp;
   <b>X</b> kladivo &nbsp;·&nbsp; <b>SHIFT</b> kotoul &nbsp;·&nbsp; <b>C</b> skrýt / zobrazit text
 </div>
-<div class="skip"><button id="skipBtn">Nemám čas na hru – ukažte mi rovnou životopis</button></div>
+<div class="skip" style="gap:10px;flex-wrap:wrap"><button id="skipBtn">Nemám čas na hru – ukažte mi rovnou životopis</button><button class="pdfbtn" data-pdf>⬇  Stáhnout CV (PDF)</button></div>
+<div id="printCv"></div>
 
 <div id="cv"></div>
 
@@ -201,6 +213,30 @@ const CV = {
 // kontakt je v kódu zakódovaný (ochrana před roboty), složí se až po kliknutí
 const KONTAKT = { e: "emMubWFuemVzQHJ1cm9nc2luZWQ=", t: "MDcxIDE3MSA3MzcgMDI0Kw==" };
 const dekoduj = x => [...new TextDecoder().decode(Uint8Array.from(atob(x), c => c.charCodeAt(0)))].reverse().join("");
+// ---------- stažení CV v PDF ----------
+// 1) Pokud je vedle index.html soubor PDF_SOUBOR (nahraný do repozitáře), stáhne se ten.
+// 2) Jinak se otevře tisk, kde jde zvolit „Uložit jako PDF“ (funguje na PC, Androidu i iOS).
+const PDF_SOUBOR = "zivotopis-denis-gorur.pdf";
+async function stahnoutPdf() {
+  try {
+    const r = await fetch(PDF_SOUBOR, { method: "HEAD", cache: "no-store" });
+    if (r.ok) { const a = document.createElement("a"); a.href = PDF_SOUBOR; a.download = PDF_SOUBOR; document.body.appendChild(a); a.click(); a.remove(); return; }
+  } catch (_) {}
+  const el = document.getElementById("printCv"); el.innerHTML = "";
+  const h = document.createElement("h1"); h.textContent = CV.jmeno;
+  const sub = document.createElement("p"); sub.className = "sub";
+  sub.textContent = "Test Engineer · ✉ " + dekoduj(KONTAKT.e) + " · ☎ " + dekoduj(KONTAKT.t);
+  el.append(h, sub);
+  CV.sekce.forEach(s => {
+    const t = document.createElement("h2"); t.textContent = s.nadpis;
+    const pre = document.createElement("pre");
+    pre.textContent = s.radky.filter(r => !/Zobrazit kontakt|v panelu pod hrou/.test(r)).join("\n");
+    el.append(t, pre);
+  });
+  const old = document.title; document.title = "Životopis – " + CV.jmeno;
+  setTimeout(() => { window.print(); document.title = old; }, 50);
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-pdf]"); if (b) { e.preventDefault(); stahnoutPdf(); } });
 function kontaktEl() {
   const wrap = document.createElement("div"); wrap.style.margin = "8px 0 4px";
   const b = document.createElement("button"); b.textContent = "✉ ☎  Zobrazit kontakt";
