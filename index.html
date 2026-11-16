@@ -669,7 +669,7 @@ const SECRET = {
     G.rect(c, 0, 396, ROOM_PX, 8, "#5a3a26");                                                                // lišta
     // plakáty (vlastní motivy podle koníčků: hry, filmy, seriály)
     const frame = (x, y) => { G.rect(c, x - 6, y - 6, 132, 162, "#1a1214"); };
-    G.rect(c, 66, 50, 148, 200, "#0a0a0a");                                                        // rám plakátu s hrdinou
+    frame(80, 80);                                                                                  // rám plakátu s kočkou
     frame(250, 80); G.rect(c, 250, 80, 120, 150, G.lin(c, 0, 80, 0, 230, [[0, "#140e22"], [1, "#3a1430"]]));    // FILMY: noční město v dešti
     for (let k = 0; k < 7; k++) { const h = 40 + R() * 70, x = 252 + k * 17; G.rect(c, x, 230 - h, 15, h, "#0c0a14");
       for (let yy = 230 - h + 6; yy < 222; yy += 9) if (R() < 0.5) G.rect(c, x + 4, yy, 4, 4, "#ffcf6b"); }
@@ -692,43 +692,9 @@ const SECRET = {
     G.ell(c, 330, 478, 220, 6, "#6a2e2a");
   },
   dyn(ox, oy) {
-    { // první plakát: zlatý prsten se žhnoucím nápisem po obvodu (vlastní nápis)
-      const X = ox + 72, Y = oy + 56, Wd = 136, Hd = 188, cx = X + Wd / 2, cy = Y + Hd / 2 + 4, cw = 3.4, chh = 5;
-      ctx.fillStyle = "#050302"; ctx.fillRect(X, Y, Wd, Hd);
-      ctx.save(); ctx.beginPath(); ctx.rect(X, Y, Wd, Hd); ctx.clip();
-      const pulseAll = 0.75 + 0.25 * Math.sin(tick * 0.05);
-      ctx.globalCompositeOperation = "lighter";                                 // rudá záře nápisu na celý plakát
-      glow(cx, cy, 95, `rgba(255,30,10,${0.16 * pulseAll})`);
-      for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2 + tick * 0.004; glow(cx + Math.cos(a) * 46, cy + Math.sin(a) * 30, 34, `rgba(255,40,15,${0.10 * pulseAll})`); }
-      ctx.globalCompositeOperation = "source-over";
-      const RX = 46, RY = 30, TH = 13, wob = Math.sin(tick * 0.02) * 0.08;      // prsten v mírném náklonu
-      ctx.font = `bold ${chh}px Consolas, "DejaVu Sans Mono", monospace`;
-      for (let gy = 0; gy < Hd / chh; gy++) for (let gx = 0; gx < Wd / cw; gx++) {
-        const px = X + (gx + 0.5) * cw, py = Y + (gy + 0.5) * chh, dx = px - cx, dy = py - cy;
-        const nx = dx / RX, ny = dy / (RY * (1 + wob)), r = Math.hypot(nx, ny);
-        const band = TH / RX;
-        if (Math.abs(r - 1) > band) continue;
-        const a = Math.atan2(ny, nx), across = (r - 1) / band;                // -1 vnitřní okraj, +1 vnější
-        let lum = 0.72 + 0.28 * Math.cos(a + 2.2) - 0.3 * across * across;  // světlo zleva shora
-        const front = ny > 0 ? 1 : 0.85;                                       // zadní strana je ve stínu
-        lum = clamp(lum * front + Math.pow(Math.max(0, Math.cos(a + 2.2 - tick * 0.01)), 30) * 0.6, 0, 1);  // putující odlesk
-        const idx = clamp(Math.round(lum * (RAMP.length - 1)), 2, RAMP.length - 1);
-        ctx.fillStyle = `rgb(${Math.round(150 + lum * 105)},${Math.round(100 + lum * 110)},${Math.round(20 + lum * 70)})`;
-        ctx.fillText(RAMP[idx], px, py);
-      }
-      // žhnoucí nápis po obvodu
-      const INS = "∿≈⌇∴ϟ∷⋰∿⌁≈∴⌇ϟ∷⋱∿≈⌁∴⌇ϟ∷⋰∿≈⌇∴⌁ϟ∷⋱∿≈⌇∴ϟ∷⌁⋰";   // abstraktní žhnoucí znaky (žádný konkrétní text)
-      ctx.font = "bold 9px Consolas, \"DejaVu Sans Mono\", monospace";
-      const n = [...INS].length;
-      [...INS].forEach((ch, i) => {
-        const a = (i / n) * Math.PI * 2 + tick * 0.004, x = cx + Math.cos(a) * RX, y = cy + Math.sin(a) * RY * (1 + wob);
-        const back = Math.sin(a) < 0, pulse = 0.65 + 0.35 * Math.sin(tick * 0.08 - i * 0.4);
-        ctx.save(); ctx.translate(x, y); ctx.rotate(a + Math.PI / 2);
-        ctx.shadowColor = "rgba(255,20,0,1)"; ctx.shadowBlur = 10 * pulse;
-        ctx.fillStyle = `rgba(255,${Math.round(40 + 60 * pulse)},${Math.round(20 * pulse)},${(back ? 0.8 : 1) * (0.6 + 0.4 * pulse)})`;
-        ctx.fillText(ch, 0, 0); ctx.restore();
-      });
-      ctx.restore();
+    { // první plakát: ASCII portrét vaší kočky (převedený z vaší fotky)
+      if (!catPoster) catPoster = buildCatPoster();
+      ctx.drawImage(catPoster, ox + 80, oy + 80, 120, 150);
     }
     { // pohyblivý plakát: padající zelené znaky (digitální déšť)
       const X = ox + 250, Y = oy + 80, Wd = 120, Hd = 150, cw = 7, chh = 9, cols = Math.floor(Wd / cw);
@@ -819,6 +785,21 @@ function buildHeroPoster() {
     o.fillStyle = `rgb(${g},${g},${g})`; o.fillText(RAMP[idx], (x + 0.5) * tw, (y + 0.5) * th);
   }
   return { img: out, x: PX, y: PY, w: PW, h: PH };
+}
+const CAT_PHOTO = {"c": 50, "r": 43, "t": "==+++++++++++++++++****+=;,,,,,,,,,,,,,,,,,,,,,,,,==++++++++++++++++++***+=;,,,,,,,,,,,,,,,,,,,,,,,,==++++++++++++++++++***+=;,,,,,,,,,,,,,,,,,,,,,,,,==++++++++++++++++++***+=;,,,,,,,,,,,,,,,,,,,,,,,,===++++++++++++++++++**+=;,,,,,,,,,,,,,,,,,,,,,,,,===+++++++++++++++++++*+=;:,,,,,,,,,,,,,,,,,,,,,,,===++++++++++++==+++++*++-:,,,,,,,,,,,,,,,,,,,,,,,==++++++++++++-:-*++++**+=;:,,,,,,,,,,,,,,,,,,,,,,==+++++++++++-:;;++++***+=-;:,,,,,,,,,,,,,,,,,,,,,==++++++++++=;;-;-*++****+==-:,,,,,,,,,,,,,,,,,,,,==+++++++++=;-==--+++*****++=;,,,,,,,,,,,,,,,,,,,,=++++++++++;:;-+--+*+******+-:,,,,,,,,,,,,,,,,,,,,=+++++++++;:;;;----+*++***+=;:,,,,,,,,,,,,,,,,,,,,=+++++++=,,;--=;;:,,-+++**+=;:,,,,,,,,,,,,,,,,,,,,==+++=-:.,:;==+--:,.:-++**++-:,,,,,,,,,,,,,,,,,,,,=-;;;;:::;;;-----;;;;;=+***+=-:,,,,,,,,,,,,,,,,,,,;::::;;--;;-;;--;;-;;;;-=+*++=-::,,,,,,,,,,,,,,,,,,::::::::::-=-;---;:::::;-+*++=-;:,,,,,,,,,,,,,,,,:,:;:,,::,,:;--==:,;,:,,,:-=++++=;;;::,,,,,,,,,,,,=-:::,,:;-:. .:=-.:;,:..:;;;;;;+++==-;;;;;::,,,,,,==;;:,,,:+:    :;:::,..::::;;,.,;=++++====-;:,,,,,-;;--;::,--    ,=:.,,,::;;;--;:,::;;-==++++-:,,,,,;::;---;;:--,. ;+..,..,;::-===-;------;-=++=;,,,,,;;:;--==-;:;+:.-:,,..;-;:=+++=+===++=;-+++=-:,,,,,;:;;--=++-=-;,..,::-*+-;=+==+==+===+++==-;;::,,,,,;;;;=+*++*+%*::;-;;+;.   ,=====--+**+-;;::,,,,,,,,-----++++**%*.:**:,::    .-===-=+**+=;:,,,,,,,,,,,-----=++%%%#%..,--:;+-..:-;:-===***+=;,,,,,,,,,,,,==-===--=+*%+.;=*#%;,;;---;;;===+**+=;:,,,,,,,,,,,*+==-==-;:;:,-#@#***;:::,,,;;-=++***+=;::,,,,,,,,,#%+---===+=:,=*%%**%*=-;;;;;;=+++***++=-;:,,,,,,,,#%==----++**=;=%*%*#%*+++++==+++++**++++=-:,,,,,,,%*++**=-=+**+==+**##%%+****+**++*+++***++=;:,,,,,,%***%#*++=+*+***%###%**+++*%%%**%*+++***++=;:,,,,,%*%%##%%%%%%%%#%####%********%%%%*+++++**++=;;::,,**%%###%%#######%####%%*****+*%%%*+++++++++++=-;:,+*%%%###%####@@#@######%%%%%%%##%*+++++++++++++=-;*%**%%###%###@@##@#######%#%####%*+++++++++++++++=++***%%######@###@@#############%**++++++++***++++-+***%%#####@@@##@@@##########%%%**++++++++*******-**++%%%#####@@##@@@@@##@#####%***+++++++++++*****-+=-+*%%%#####@@#@@@@@@@@@###%#**++++++++++++++***--;;+**%%%%######@##@@@@@@##%***+++++++++++++++++*", "k": "11222222233333444455555467899999988888888888888888:2222222233344434455555467899999998888888888888888:2222222233334444445555467899999999888888888888888:2222222233333444445555467899999999988888888888888222222223333334444455554:7899999999988888888888888222222223333334344444554;<=999999999888888888888882222222233333456154555553>?8999999998888888888888822222222333333@AB5455555367C89999999998888888888882222222233333DAEF355555542<7GC999999988888888888882222222233336HE@E@5455555326@G89999998888888888888122222223246F@66II4455455543>78999999988888888888822222222233FAEJ2J@3555445553>?899999999888888888881222222242EKEEE@@I@1L5445L4;<=99999999988888888888:22222336MNFOJ6FFPMQJ1445L4:7=99999999998888888888:22211JARMSKJJ1IIKQTU@345552<7C99999999999888888886BEEFFAPPFFFIJIIIIHFFIJ25553:@?8999999999988888888FKPKKFFIIFFIHHIIVFIVFKHI15553:<7=89999999998888888QUKKAKPPPPSIJIVIWIFPUPPPFI2553;>7=8888888888888888UMPFXQQPPQNXFIIY1PQFMUQQMKI134336<77?=888888888888JIPPQQMUFWPR0RPZI[KFQUTTPKKHEFI2\\2;:><7777?=888888JJFVPQQQU]A0000PFPSUQTTUPPAFKQTMF62\\32;;;;>7=88888IFFWWFPPQI@0000^1ARNTNUPFFFIIFMQUAFEJ662532>?88888FSPFWWWFKUWBC_0D`RTNTTQFSSJ1ZJIHIOO@@@H@6226788888FSSFIJ1YIFPI1M_JPTMTTKWFSJa1a11YJ6226HO2\\2:@G88888KKKEOO141JZOFTTTNPPWb1IFJaZZ11111YY`42;:><7GC89888IFFI14414cdecPUFWFFdFR000MZffZYII4552@77?=88899888JIII@444agbh5RKggSQAA0000RiJJJJJ4L55:7=88899999888IIIIJ:14hhjkhRlUIIAE4<mmAWSSI1J15554:78999999999881JJJ6JII64nh2[K64koFQFHIWIVSFZ115555;<=8899999998851fJJJJIFAFAp6jqkcccFUUUQNQKFJ11455536<?=889999888rh4JIIJ11`1AM6ghegohcJWVKKFVHZ1a555553;>s?C8999988qh1JtWiJ``5gJK1ggeguhcaca44ZJa`4555555\\2;@?8999988hga444JIJ15g4YJ4ggvkug4cbcc4cb44555555553;<=889998obbghkg44f1444gghwwko4c4aabehhggg55555555367=88889obohkkhghhhhhhkhkkkkhgcgbccggoohhg5555555526<7G=88gchhvkkhekkkkkkkhwkkkueggogc4ghhhL54455555\\\\26>7=84ghouvkkovkkkqqxqkukkkkuhhhoghukhg53444555555\\26<7ceggeuukuhkkkxqxqqkkkkkkuuvhkkkkhn533455555555\\3;;44ggghhvkvkkkqqkkqqkkkkkvkkkkkkkhn533455555555555\\W4ggcehvvkvkqqqkkqqqkkkkkkkkykjjjL533335555555555LIcg44ehhvvvkkqqkkqqqqqyyqqykkyjnnL5323333555555555WaZIagohuuuvkkxxxqqqqqqqqqyyjjrn55333233333\\555555WWSV1gcohhuvkkkkxqxqqzqqqqykjnnn5332222333\\5555555", "p": ["#a08c64", "#a08c78", "#a0a078", "#b4a078", "#b4a08c", "#8c7864", "#50503c", "#282828", "#282814", "#8c8c64", "#8c8c78", "#646450", "#3c3c28", "#787864", "#503c3c", "#786450", "#503c28", "#787850", "#3c2828", "#64643c", "#64503c", "#645028", "#3c3c3c", "#78503c", "#78643c", "#8c7850", "#643c28", "#b4b48c", "#3c2814", "#3c1400", "#8c6450", "#503c14", "#3c2800", "#140000", "#643c14", "#281400", "#502814", "#785028", "#8c643c", "#502800", "#a07864", "#a07850", "#280000", "#a0a08c", "#b48c50", "#281414", "#141400", "#b48c78", "#b48c64", "#c8b478", "#c8a078", "#b4a064", "#dcc88c", "#a08c50", "#c8b48c", "#dcc8a0", "#786428", "#dcc8b4", "#f0dcb4", "#3c0000", "#141414", "#c8b4a0", "#dcb48c", "#3c1414", "#f0f0c8", "#dcdcb4", "#645050", "#8c783c", "#f0c8a0", "#f0dca0", "#f0c8b4", "#f0f0b4", "#f0dcc8", "#f0f0dc"]};
+let catPoster = null;
+function buildCatPoster() {
+  const W0 = 120, H0 = 150, tw = W0 / CAT_PHOTO.c, th = H0 / CAT_PHOTO.r;
+  const out = document.createElement("canvas"); out.width = Math.ceil(W0 * DPR); out.height = Math.ceil(H0 * DPR);
+  const o = out.getContext("2d"); o.scale(DPR, DPR); o.fillStyle = "#050405"; o.fillRect(0, 0, W0, H0);
+  o.textAlign = "center"; o.textBaseline = "middle"; o.font = `bold ${Math.round(th * 1.15)}px Consolas, "DejaVu Sans Mono", monospace`;
+  const t = [...CAT_PHOTO.t];
+  for (let y = 0; y < CAT_PHOTO.r; y++) for (let x = 0; x < CAT_PHOTO.c; x++) {
+    const i = y * CAT_PHOTO.c + x, ch = t[i], k = CAT_PHOTO.k.charCodeAt(i) - 48;
+    if (ch === " " || !k) continue;
+    o.fillStyle = CAT_PHOTO.p[k - 1]; o.fillText(ch, (x + 0.5) * tw, (y + 0.5) * th);
+  }
+  return out;
 }
 const SECRET_TEXT = [
   { t: "♥  DĚKUJI ZA HRANÍ!  ♥", c: "#ffb3c8" },
@@ -990,6 +971,10 @@ const hidden = new Set();
 let keys = {}, pressed = {};
 const modal = document.getElementById("modal");
 addEventListener("keydown", e => {
+  // oprava: tlačítko na stránce (např. „Nemám čas na hru“) si drželo fokus a Enter/mezerník ho znovu „kliklo“
+  if (e.target && e.target.tagName === "BUTTON" && !modal.classList.contains("open") && !gameOver && ["Enter", "Space"].includes(e.code)) {
+    e.preventDefault(); e.target.blur();
+  }
   if (gameOver && !modal.classList.contains("open")) {
     if (e.code === "Digit1" || e.code === "Enter") restartGame();
     else if (e.code === "Digit2") showCvFromGameOver();
@@ -1187,7 +1172,7 @@ const box = document.getElementById("box"), mt = document.getElementById("mt"), 
       ansRow = document.getElementById("ansRow"), closeRow = document.getElementById("closeRow");
 let curPz = null, curOk = null, tries = 0, btns = [];
 function openPuzzle(pz, ok) {
-  { const old = document.getElementById("modalKontakt"); if (old) old.remove(); }
+  for (const id of ["modalKontakt", "modalRest"]) { const old = document.getElementById(id); if (old) old.remove(); }
   paused = true; keys = {}; curPz = pz; curOk = ok; tries = 0;
   mt.textContent = pz.title; mq.textContent = pz.q; mfb.textContent = "Klikněte na odpověď (nebo stiskněte 1, 2, 3).";
   mfb.style.color = "#6e6a96";
@@ -1201,9 +1186,16 @@ function openPuzzle(pz, ok) {
 }
 function openInfo(title, text) {
   paused = true; keys = {}; curPz = null;
-  mt.textContent = title; mq.textContent = text;
   const old = document.getElementById("modalKontakt"); if (old) old.remove();
-  const k = kontaktEl(); k.id = "modalKontakt"; mq.after(k);
+  const oldRest = document.getElementById("modalRest"); if (oldRest) oldRest.remove();
+  mt.textContent = title;
+  const lines = text.split("\n"), ki = lines.findIndex(r => /Zobrazit kontakt/.test(r));
+  if (ki >= 0) {
+    mq.textContent = lines.slice(0, ki).join("\n");
+    const k = kontaktEl(); k.id = "modalKontakt"; mq.after(k);
+    const rest = document.createElement("pre"); rest.id = "modalRest"; rest.style.cssText = "white-space:pre-wrap;margin:0 0 14px;font:inherit;font-size:15px;line-height:1.5";
+    rest.textContent = lines.slice(ki + 2).join("\n").replace(/^\n/, ""); k.after(rest);
+  } else mq.textContent = text;
   mfb.style.color = "#6e6a96"; mfb.textContent = "↑ ↓ posun · E / Esc zavřít";
   ansRow.style.display = "none"; closeRow.style.display = "flex";
   box.scrollTop = 0;
@@ -1222,8 +1214,7 @@ document.getElementById("goArt").textContent = [
 function triggerGameOver() { gameOver = true; paused = true; keys = {}; goEl.classList.add("open"); }
 function restartGame() { location.reload(); }
 function showCvFromGameOver() {
-  for (let i = 0; i < NS; i++) solved[i] = true;
-  renderPanel(); goEl.classList.remove("open");
+  unlockAll(); goEl.classList.remove("open");
   openInfo("ŽIVOTOPIS // " + CV.jmeno.toUpperCase(), fullCvText());
 }
 document.getElementById("goRestart").onclick = restartGame;
@@ -1257,9 +1248,16 @@ function renderPanel() {
     const d = document.createElement("div"); d.className = "sec" + (solved[i] ? "" : " locked");
     const t = document.createElement("h4"); t.textContent = s.nadpis;
     const p = document.createElement("pre");
-    p.textContent = solved[i] ? s.radky.join("\n") : "░░░░░░░░  zamčeno – vyřešte úlohu v místnosti " + (i + 1);
-    d.append(t, p);
-    if (i === 0 && solved[0]) d.appendChild(kontaktEl());
+    if (i === 0 && solved[0]) {                                   // kontakt na místě řádku s kontaktem
+      const k = s.radky.findIndex(r => /Zobrazit kontakt/.test(r));
+      const before = s.radky.slice(0, k), after = s.radky.slice(k + 2).filter((r, j) => !(j === 0 && r === ""));
+      p.textContent = before.join("\n");
+      const p2 = document.createElement("pre"); p2.textContent = after.join("\n");
+      d.append(t, p, kontaktEl(), p2);
+    } else {
+      p.textContent = solved[i] ? s.radky.join("\n") : "░░░░░░░░  zamčeno – vyřešte úlohu v místnosti " + (i + 1);
+      d.append(t, p);
+    }
     el.appendChild(d);
   });
 }
@@ -1573,7 +1571,7 @@ const kcv = document.createElement("canvas"); kcv.width = KCOLS; kcv.height = KR
 const kctx = kcv.getContext("2d", { willReadFrequently: true });
 const CAT_TINT = "rgb";                                              // vlastní barvy (ragdoll)
 // bílá chlupatá ragdoll: krémové tělo, tmavší "odznaky" (obličej, uši, ocas), modré oči, bílé tlapky
-const RAG = { fur: "#f3eee4", ruff: "#ffffff", shade: "#d8d0c2", point: "#9a7c64", pointL: "#c2a68c", eye: "#4aa6ff", nose: "#e8a0a0" };
+const RAG = { fur: "#e6d6c2", ruff: "#fbf6ee", shade: "#c8b49e", point: "#8e8478", pointL: "#b8a896", eye: "#8fc4ec", eyeD: "#4a7aa6", nose: "#c27a66", earIn: "#e8b8b0", stripe: "#7a7068" };   // podle fotek: béžová srst, šedobéžová maska, světle modré oči, růžovohnědý nos
 const FLUFF = (() => { const R = srand(77); return Array.from({ length: 40 }, () => [R(), R(), R()]); })();
 function fluffy(c, x, y, rx, ry, col, n, size, off) {
   c.fillStyle = col; c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, 7); c.fill();
@@ -1607,14 +1605,18 @@ function renderCat(happy) {
   c.fillStyle = RAG.point;                                                                  // tmavá ouška
   c.beginPath(); c.moveTo(-8, -3); c.lineTo(-6, -14 + tilt); c.lineTo(-1, -7); c.fill();
   c.beginPath(); c.moveTo(1, -7); c.lineTo(6, -14 - tilt); c.lineTo(9, -2); c.fill();
+  c.fillStyle = RAG.earIn; c.beginPath(); c.moveTo(2.5, -7); c.lineTo(6, -12 - tilt); c.lineTo(7.5, -4); c.fill();
   fluffy(c, 0, 1, 10, 9, RAG.fur, 14, 2.4, 20);                                             // chlupaté tváře
   c.fillStyle = RAG.pointL; c.beginPath(); c.ellipse(2.5, 0, 6.5, 6, 0, 0, 7); c.fill();       // maska
   c.fillStyle = RAG.point; c.beginPath(); c.ellipse(3.5, 1, 4, 3.5, 0, 0, 7); c.fill();
+  c.fillStyle = RAG.fur; c.beginPath(); c.ellipse(4.5, -2, 1.2, 4.5, 0.15, 0, 7); c.fill();          // světlý pruh mezi očima
+  for (const sx of [-1.5, 1, 3.5]) ln(sx, -8, sx + 1, -4.5, 0.9, RAG.stripe);                       // jemné tabby pruhy na čele
   c.fillStyle = RAG.ruff; c.beginPath(); c.ellipse(4.5, 4.5, 4.5, 2.6, 0, 0, 7); c.fill();     // světlý čumáček
   c.fillStyle = RAG.nose; c.beginPath(); c.arc(7, 2.4, 1.3, 0, 7); c.fill();
   if (happy || tick % 170 < 8) ln(1.5, -2.2, 5, -1.8, 1.3, "#2a2a2a");                         // zavřená očka
-  else { c.fillStyle = RAG.eye; c.beginPath(); c.ellipse(3.6, -2, 2, 2.4, 0, 0, 7); c.fill();
-         c.fillStyle = "#10203a"; c.beginPath(); c.ellipse(4, -2, 0.8, 1.6, 0, 0, 7); c.fill();
+  else { c.fillStyle = RAG.eyeD; c.beginPath(); c.ellipse(3.6, -2, 2.6, 2.9, 0, 0, 7); c.fill();
+         c.fillStyle = RAG.eye; c.beginPath(); c.ellipse(3.6, -2, 2.1, 2.4, 0, 0, 7); c.fill();
+         c.fillStyle = "#10203a"; c.beginPath(); c.ellipse(4, -2, 1, 1.7, 0, 0, 7); c.fill();
          c.fillStyle = "#ffffff"; c.fillRect(3.2, -3.6, 0.9, 0.9); }
   for (const dy of [-0.5, 1.5]) ln(8, 3.5, 15, 3.5 + dy * 1.5, 0.7, "#ffffff");               // vousky
   c.restore();
@@ -1979,10 +1981,17 @@ function loop(now) {
   draw();
   requestAnimationFrame(loop);
 }
-document.getElementById("skipBtn").onclick = () => {
-  for (let i = 0; i < NS; i++) solved[i] = true;
-  renderPanel(); document.getElementById("cv").scrollIntoView({ behavior: "smooth" });
+// odemknutí všeho (přeskočení hry / zobrazení CV z GAME OVER): brány otevřené, tajná úroveň přístupná
+function unlockAll() {
+  for (let i = 0; i < NS; i++) { if (!solved[i]) solved[i] = true; openGate(i); }
+  celebrate = true; unlockSecret(); renderPanel();
+}
+document.getElementById("skipBtn").onclick = e => {
+  e.currentTarget.blur();
+  unlockAll(); document.getElementById("cv").scrollIntoView({ behavior: "smooth" });
 };
+// po kliknutí na jakékoli tlačítko mimo okna mu vezmeme fokus, ať klávesy patří hře
+document.addEventListener("click", e => { const b = e.target.closest("button"); if (b && !b.closest(".modal")) setTimeout(() => b.blur(), 0); });
 renderPanel();
 startCine([
   " #####   #       #",
